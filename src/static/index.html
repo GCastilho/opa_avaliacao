@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Avaliação DEV opabox</title>
+	<style>
+		body {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: space-between;
+		}
+
+		body > * {
+			flex: 1;
+			text-align: center;
+		}
+
+		#ord_list > div > div > * {
+			display: inline;
+		}
+
+		h4 {
+			margin: 0.5em;
+		}
+
+		form {
+			border: 1px solid lightgray;
+			margin: 0.5em;
+			padding: 1em;
+			border-radius: 6px;
+			box-shadow: 0px 5px 50px 0px rgba(18, 89, 93, 0.15);
+		}
+
+		form > button:last-of-type {
+			margin: 1em;
+			font-size: inherit;
+			padding: 0.7em 1.6em;
+		}
+	</style>
+</head>
+<body>
+	<form
+		action="POST"
+		id="ord_list"
+	>
+		<h2>Ordena Lista</h2>
+		<div id="sala_n">
+			<div>
+				<h4>SalaN: </h4>
+				<p></p>
+			</div>
+			<label>Número: <input type="number"></label>
+			<button type="button" id="sala_n_push">push</button>
+			<button type="button" id="sala_n_pop">pop</button>
+		</div>
+		<div id="sala_s">
+			<div>
+				<h4>SalaS: </h4>
+				<p></p>
+			</div>
+			<label>Número: <input type="number"></label>
+			<button type="button" id="sala_s_push">push</button>
+			<button type="button" id="sala_s_pop">pop</button>
+		</div>
+		<button>submit</button>
+	</form>
+
+	<form
+		action="POST"
+		id="interlace"
+	>
+		<h2>Interlace?</h2>
+		<div>
+			<h4>Range 1</h4>
+			<label><input id="r1_a" type="number"></label>
+			<label><input id="r1_b" type="number"></label>
+		</div>
+		<div>
+			<h4>Range 2</h4>
+			<label><input id="r2_a" type="number"></label>
+			<label><input id="r2_b" type="number"></label>
+		</div>
+		<button>submit</button>
+	</form>
+</body>
+<script>
+	let salaN = []
+	let salaS = []
+
+	function sala_push(arr, sala) {
+		const div = document.querySelector(`#sala_${sala}`)
+		const n = +div.querySelector('input').value
+		if (isNaN(n)) alert('Only numbers allowed')
+		arr.push(n)
+		div.querySelector('p').innerHTML = arr.join(', ')
+	}
+	function sala_pop(arr, sala) {
+		const div = document.querySelector(`#sala_${sala}`)
+		arr.pop()
+		div.querySelector('p').innerHTML = arr.join(', ')
+	}
+
+	document.querySelector('#sala_n_push').addEventListener('click', () => sala_push(salaN, 'n'))
+	document.querySelector('#sala_s_push').addEventListener('click', () => sala_push(salaS, 's'))
+
+	document.querySelector('#sala_n_pop').addEventListener('click', () => sala_pop(salaN, 'n'))
+	document.querySelector('#sala_s_pop').addEventListener('click', () => sala_pop(salaS, 's'))
+
+	document.querySelector('#ord_list').addEventListener('submit', async e => {
+		e.preventDefault()
+		const res = await fetch('/ordenaLista', {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/json'
+			},
+			body: JSON.stringify({
+				listas: {
+					salaN,
+					salaS,
+				}
+			})
+		})
+		const { listas } = await res.json()
+		document.querySelector('#sala_n').querySelector('p').innerHTML = listas.salaN.join(', ')
+		document.querySelector('#sala_s').querySelector('p').innerHTML = listas.salaS.join(', ')
+		document.querySelector('#sala_n').querySelector('input').value = null
+		document.querySelector('#sala_s').querySelector('input').value = null
+	})
+
+	document.querySelector('#interlace').addEventListener('submit', async e => {
+		e.preventDefault()
+		const r1_a = +document.querySelector('#r1_a').value
+		const r1_b = +document.querySelector('#r1_b').value
+		const r2_a = +document.querySelector('#r2_a').value
+		const r2_b = +document.querySelector('#r2_b').value
+		const res = await fetch('/interlace', {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/json'
+			},
+			body: JSON.stringify({
+				intervaloA: [r1_a, r1_b],
+				intervaloB: [r2_a, r2_b]
+			})
+		})
+		const { result } = await res.json()
+		document.querySelector('#interlace').querySelector('h2').innerHTML = `Interlace? ${result ? 'sim' : 'não'}`
+	})
+</script>
+</html>
